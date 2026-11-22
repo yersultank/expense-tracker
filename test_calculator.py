@@ -38,3 +38,20 @@ def test_export_report(tmp_path):
     result = export_report(expenses, str(out_file), "student")
     assert out_file.exists()
     assert "Total (student): 22.50" in result
+
+
+def test_add_expense_rejects_invalid_amounts():
+    expenses = []
+    with pytest.raises(ValueError, match="positive finite number"):
+        add_expense(expenses, "Refund Bug", -15.0, "food")
+    with pytest.raises(ValueError, match="positive finite number"):
+        add_expense(expenses, "Zero Item", 0.0, "food")
+    with pytest.raises(ValueError, match="positive finite number"):
+        add_expense(expenses, "NaN Item", float("nan"), "food")
+
+
+def test_export_report_blocks_path_traversal(tmp_path):
+    expenses = [{"title": "Book", "amount": 25.0, "category": "study"}]
+    traversal_path = str(tmp_path / ".." / "outside_report.txt")
+    with pytest.raises(ValueError, match="Path traversal"):
+        export_report(expenses, traversal_path, "none")
